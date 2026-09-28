@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="University crest (placeholder)">
+  <!-- Placeholder crest drawn for this coursework project; swap in an official logo only with permission. -->
+  <path d="M10 8h100v62c0 32-22 52-50 62C32 122 10 102 10 70z" fill="#8fc49a" stroke="#3b2f1c" stroke-width="4"/>
+  <g stroke="#e0301e" stroke-width="3">
+    <path d="M60 14v8M60 50v8M38 36h8M74 36h8M44 20l6 6M70 46l6 6M76 20l-6 6M50 46l-6 6"/>
+  </g>
+  <circle cx="60" cy="36" r="12" fill="#f7d22b" stroke="#e0301e" stroke-width="2"/>
+  <path d="M28 76l64-28M92 76L28 48" stroke="#4a3a5a" stroke-width="6" stroke-linecap="round"/>
+  <path d="M40 60l20-8 20 8-20 8z" fill="#222"/>
+  <path d="M30 78c10-6 20-6 30 0 10-6 20-6 30 0v10c-10-6-20-6-30 0-10-6-20-6-30 0z" fill="#f7e04a" stroke="#3b2f1c" stroke-width="2"/>
+  <path d="M60 78v10" stroke="#3b2f1c" stroke-width="2"/>
+  <path d="M26 96h68l-8 14H34z" fill="#f7d22b" stroke="#3b2f1c" stroke-width="2"/>
+  <path d="M34 96l6 14M46 96l6 14M58 96l6 14M70 96l6 14M82 96l-4 14" stroke="#3b2f1c" stroke-width="1.5"/>
+</svg>

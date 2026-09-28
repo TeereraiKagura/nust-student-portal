@@ -1,0 +1,4 @@
+# Same line endings for everyone in the group, whatever their OS.
+* text=auto eol=lf
+*.png binary
+*.jpg binary

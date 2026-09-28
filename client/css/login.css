@@ -1,0 +1,188 @@
+/* Login page — recreates the blue header, yellow diagonal and centred card. */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0b3d5c;
+}
+
+.login-header {
+  background: linear-gradient(90deg, #0b6fae 0%, #0496cf 55%, var(--cyan) 100%);
+  color: #fff;
+  text-align: center;
+  padding: 1rem 1rem 1.6rem;
+}
+.login-header__crest { width: 58px; margin: 0 auto; }
+.login-header h1 {
+  margin: .6rem 0 0;
+  font-weight: 400;
+  text-transform: uppercase;
+  font-size: clamp(1rem, 2.3vw, 2.1rem);
+  letter-spacing: .01em;
+}
+
+.login-main {
+  flex: 1;
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 4rem 1rem;
+  overflow: hidden;
+  /* Stand-in for the photo on the real site: a blue desk scene suggested with gradients. */
+  background:
+    radial-gradient(ellipse at 80% 70%, rgba(120, 72, 40, .55), transparent 55%),
+    radial-gradient(ellipse at 60% 20%, rgba(255, 255, 255, .35), transparent 50%),
+    linear-gradient(120deg, #1f6ea5 0%, #5aa7d8 40%, #7fb8dc 60%, #6b4a33 100%);
+}
+
+/* White stripe + yellow triangle on the left. */
+.login-main::before,
+.login-main::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.login-main::before { background: #fff; clip-path: polygon(0 0, 19.5% 0, 44% 100%, 0 100%); }
+.login-main::after  { background: var(--yellow); clip-path: polygon(0 0, 18% 0, 42.5% 100%, 0 100%); }
+
+.login-main__crest {
+  position: absolute;
+  z-index: 1;
+  left: 4%;
+  bottom: 8%;
+  width: min(22vw, 300px);
+  text-align: center;
+}
+.login-main__crest p {
+  margin: .5rem 0 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #3b2f1c;
+  letter-spacing: .08em;
+  font-size: clamp(.7rem, 1.3vw, 1rem);
+}
+
+.login-card {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 610px);
+  background: #fff;
+  border-radius: 6px;
+  padding: 1.75rem 1.5rem 2.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+.login-card h2 {
+  margin: 0 0 1.25rem;
+  font-weight: 400;
+  font-size: 1.9rem;
+  text-transform: uppercase;
+}
+.login-card input {
+  display: block;
+  width: 100%;
+  padding: .9rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid #d5dbe3;
+  border-radius: 5px;
+  background: #e8f0fe;
+  font-size: 1.15rem;
+}
+.login-card input:focus { outline: 2px solid var(--login-btn); outline-offset: 0; }
+
+.btn--login {
+  display: block;
+  margin: 1.75rem auto 0;
+  min-width: 170px;
+  padding: .9rem 2rem;
+  border: 0;
+  border-radius: 5px;
+  background: var(--login-btn);
+  color: #fff;
+  font-size: 1.6rem;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.btn--login:hover { background: #0580d0; }
+.btn--login:disabled { opacity: .7; cursor: progress; }
+
+.login-card__switch { margin: 1.75rem 0 -1rem; text-align: center; font-size: .95rem; }
+.login-card__switch a { color: var(--blue); }
+
+/* ---- Landing page: choose student or staff portal ---------------------------- */
+.chooser {
+  position: relative;
+  z-index: 2;
+  width: min(100%, 820px);
+  background: #fff;
+  border-radius: 6px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+.chooser__title {
+  margin: 0 0 1.25rem;
+  font-weight: 400;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+}
+.chooser__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+.portal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .5rem;
+  height: 100%;
+  padding: 1.5rem;
+  border: 2px solid #d5dbe3;
+  border-top: 6px solid var(--login-btn);
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.portal-card--staff { border-top-color: var(--yellow); }
+.portal-card:hover {
+  border-color: var(--login-btn);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+  transform: translateY(-2px);
+}
+.portal-card--staff:hover { border-color: #d9a200; }
+.portal-card__icon { width: 48px; height: 48px; color: var(--navy); }
+.portal-card__title { font-size: 1.5rem; font-weight: 700; color: var(--navy); }
+.portal-card__text { color: var(--muted); }
+.portal-card__cta { margin-top: auto; padding-top: .5rem; font-weight: 600; color: var(--blue); }
+.chooser__help { margin: 1.25rem 0 0; font-size: .9rem; color: var(--muted); text-align: center; }
+
+.login-footer {
+  background: #06283d;
+  color: #b9c9d6;
+  text-align: center;
+  font-size: .8rem;
+  padding: .6rem 1rem;
+}
+.login-footer a { color: #fff; }
+
+@media (max-width: 720px) {
+  .login-main { padding: 2rem 16px; }
+  .login-main::before { clip-path: polygon(0 0, 30% 0, 60% 100%, 0 100%); }
+  .login-main::after  { clip-path: polygon(0 0, 28% 0, 58% 100%, 0 100%); }
+  .login-main__crest { display: none; }
+  .login-card h2 { font-size: 1.5rem; }
+  .btn--login { font-size: 1.25rem; }
+  .chooser__title { font-size: 1.3rem; }
+  .chooser__list { grid-template-columns: 1fr; gap: .9rem; }
+  .portal-card { padding: 1.1rem; }
+  .portal-card__icon { width: 36px; height: 36px; }
+  .portal-card__title { font-size: 1.25rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-card { transition: none; }
+  .portal-card:hover { transform: none; }
+}

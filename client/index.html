@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portals | NUST</title>
+  <meta name="description" content="Choose the NUST Student Portal or Staff Portal.">
+  <link rel="icon" href="img/crest.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page">
+  <header class="login-header">
+    <img class="login-header__crest" src="img/crest.svg" alt="University crest">
+    <h1>National University of Science and Technology</h1>
+  </header>
+
+  <main class="login-main">
+    <div class="login-main__crest" aria-hidden="true">
+      <img src="img/crest.svg" alt="">
+      <p>Think in other terms</p>
+    </div>
+
+    <section class="chooser" aria-labelledby="chooser-title">
+      <h2 id="chooser-title" class="chooser__title">Welcome — choose your portal</h2>
+
+      <ul class="chooser__list">
+        <li>
+          <a class="portal-card" href="/student.html">
+            <svg class="portal-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5"/><path d="M22 9v6"/>
+            </svg>
+            <span class="portal-card__title">Student Portal</span>
+            <span class="portal-card__text">Registration, fees and payments, results, exam timetable</span>
+            <span class="portal-card__cta">Log in with your student number →</span>
+          </a>
+        </li>
+        <li>
+          <a class="portal-card portal-card--staff" href="/staff.html">
+            <svg class="portal-card__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <path d="M3 13h18"/>
+            </svg>
+            <span class="portal-card__title">Staff Portal</span>
+            <span class="portal-card__text">Capture and publish results, fee structure, student accounts</span>
+            <span class="portal-card__cta">Log in with your staff number →</span>
+          </a>
+        </li>
+      </ul>
+
+      <p class="chooser__help">
+        Demo site — data resets to the demo accounts from time to time.
+        · Forgotten your password? Contact the ICT Help Desk.
+        · <a href="https://www.nust.ac.zw" target="_blank" rel="noopener">Main website</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="login-footer">
+    Coursework prototype for learning purposes — not affiliated with NUST. Demo data only.
+  </footer>
+</body>
+</html>

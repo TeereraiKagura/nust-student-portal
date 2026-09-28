@@ -1,0 +1,33 @@
+# Phase 6 — Deployment & Maintenance
+
+## 6.1 Deployment checklist
+1. Set `NODE_ENV=production` and a long random `SESSION_SECRET` in `server/.env`.
+   The server refuses to start in production with the placeholder secret.
+2. Serve over **HTTPS** behind a reverse proxy (nginx, Caddy, or a platform like Render/Railway).
+   In production the app sets `trust proxy` and marks the cookie `Secure`.
+3. Put the SQLite file on a persistent disk (`DB_FILE`), and back it up daily
+   (`sqlite3 portal.db ".backup backup.db"`).
+4. Replace the in-memory session store with a persistent one (e.g. `connect-sqlite3`) so
+   restarts don't log everyone out. Replace the in-memory login limiter for multi-instance setups.
+5. Run `npm ci --omit=dev` and `npm start` under a process manager (pm2/systemd) that restarts on crash.
+
+## 6.2 Maintenance
+- **Corrective:** fix bugs reported through Enquiries/ICT. Add a failing test first, then fix.
+- **Adaptive:** new semester = insert a `semesters` row, set `is_current`, and add `exam_timetable`
+  rows. The bursary sets that semester's fees in the staff portal. No code change is needed.
+- **Schema changes:** never edit `schema.sql` for a live system. Add the next numbered file to
+  `server/src/migrations/` (e.g. `002_lecturer_courses.sql`). It runs automatically on the next start.
+- **Perfective:** see the backlog below.
+- **Preventive:** `npm audit` monthly, keep Node LTS current, review logs.
+
+## 6.3 Backlog for next iterations
+- ~~Staff portal for results and fees~~ ✅ v0.2
+- Assign lecturers to courses (currently any lecturer can mark any course)
+- Staff screens for CA marks, exam timetable, semesters (open/close registration), staff accounts
+- CSV upload of marks for large classes
+- Real payment integration (Paynow/EcoCash API) with signed callbacks and PENDING → SUCCESS flow
+- Password reset via email/SMS OTP
+- PDF download for fees quote and results
+- Fees per programme/level, bursary/sponsorship support
+- Audit log of logins and payments
+- Accessibility audit with a screen reader

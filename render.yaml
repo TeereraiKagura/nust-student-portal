@@ -1,0 +1,22 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# On Render: New → Blueprint → pick this repository → Apply.
+services:
+  - type: web
+    name: nust-student-portal
+    runtime: node
+    plan: free
+    region: frankfurt            # closest Render region to Zimbabwe
+    buildCommand: cd server && npm ci
+    startCommand: cd server && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "24"
+      - key: SESSION_SECRET
+        generateValue: true      # Render creates a long random secret
+      # The free plan has no persistent disk: the database is recreated with
+      # demo data on every start (after sleeping or redeploying).
+      - key: AUTO_SEED
+        value: "true"

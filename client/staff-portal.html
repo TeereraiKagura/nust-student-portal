@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NUST Staff Portal</title>
+  <link rel="icon" href="img/crest.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/portal.css">
+</head>
+<body class="portal portal--staff" data-login-page="/staff.html">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <button id="menu-toggle" class="topbar__menu" type="button" aria-label="Toggle menu"
+            aria-controls="sidebar" aria-expanded="true"></button>
+    <a class="topbar__title" href="#/dashboard">NUST Staff Portal</a>
+    <span id="role-pill" class="topbar__role"></span>
+    <button id="logout" class="btn btn--navy topbar__logout" type="button">Logout</button>
+  </header>
+
+  <div class="layout">
+    <nav id="sidebar" class="sidebar" aria-label="Staff navigation">
+      <div class="sidebar__profile">
+        <div class="sidebar__avatar"><img src="img/crest.svg" alt=""></div>
+        <p id="sidebar-name" class="sidebar__name">&nbsp;</p>
+        <p id="sidebar-role" class="sidebar__role"></p>
+      </div>
+      <ul id="nav" class="nav"></ul>
+    </nav>
+    <div id="backdrop" class="backdrop" hidden></div>
+
+    <main id="main" class="content" tabindex="-1"></main>
+  </div>
+
+  <script type="module" src="js/staff/app.js"></script>
+</body>
+</html>

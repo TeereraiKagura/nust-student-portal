@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Staff Portal | NUST</title>
+  <link rel="icon" href="img/crest.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page login-page--staff" data-login-page="/staff.html">
+  <header class="login-header">
+    <img class="login-header__crest" src="img/crest.svg" alt="University crest">
+    <h1>National University of Science and Technology</h1>
+  </header>
+
+  <main class="login-main">
+    <div class="login-main__crest" aria-hidden="true">
+      <img src="img/crest.svg" alt="">
+      <p>Think in other terms</p>
+    </div>
+
+    <form id="login-form" class="login-card" novalidate
+          data-endpoint="/staff/auth/login" data-id-field="staffNumber" data-redirect="/staff-portal.html">
+      <h2>Staff Portal</h2>
+      <div id="login-error" class="alert alert--error" role="alert" hidden></div>
+
+      <label class="sr-only" for="staffNumber">Staff number</label>
+      <input id="staffNumber" name="staffNumber" placeholder="Staff Number"
+             autocomplete="username" autocapitalize="characters" spellcheck="false" required>
+
+      <label class="sr-only" for="password">Password</label>
+      <input id="password" name="password" type="password" placeholder="Password"
+             autocomplete="current-password" required>
+
+      <button type="submit" class="btn--login">Log In</button>
+      <p class="login-card__switch"><a href="/">← Not staff? Choose a different portal</a></p>
+    </form>
+  </main>
+
+  <footer class="login-footer">
+    Coursework prototype for learning purposes — not affiliated with NUST. Demo data only.
+  </footer>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
