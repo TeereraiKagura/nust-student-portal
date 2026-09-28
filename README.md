@@ -13,7 +13,13 @@ A full-stack recreation of the NUST Student Portal built as a web-development le
 | Auth     | bcrypt password hashes + server sessions     |
 | Testing  | `node:test` + `supertest`                    |
 
-## Quick start
+## Live demo
+
+**https://nust-student-portal.onrender.com** — hosted on Render's free plan.
+The first visit after 15 minutes of inactivity takes about 50 seconds to wake up, and the data
+resets to the demo accounts below whenever it wakes or redeploys.
+
+## Quick start (run it on your own computer)
 
 ```bash
 cd server
