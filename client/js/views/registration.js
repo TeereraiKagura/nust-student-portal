@@ -3,13 +3,26 @@ import { html, raw, mount, alertBox } from '../util.js';
 
 export async function registrationView(el, { message } = {}) {
   const data = await api('/registration');
-  const open = data.semester.registrationOpen;
+  const required = data.required;
+  const editable = data.semester.registrationOpen && !data.locked;
+  const cores = data.courses.filter((c) => c.type === 'CORE').length;
+
+  let notice = null;
+  if (!data.semester.registrationOpen) {
+    notice = alertBox('info', `Registration for ${data.semester.label} is closed. Your registration is shown read-only.`);
+  } else if (data.locked) {
+    notice = alertBox('info', 'Marks have been entered for your courses, so your registration can no longer be changed.');
+  } else if (!data.isRegistered) {
+    notice = alertBox('info', `Select exactly ${required} courses. The ${cores} core courses are compulsory, so choose ` +
+      `${required - cores} elective${required - cores === 1 ? '' : 's'} to make ${required}.`);
+  }
 
   mount(el, html`
     <h1 class="page-title">New Registration <small>${data.semester.label}</small></h1>
     ${message}
-    ${!open && alertBox('info', `Registration for ${data.semester.label} is closed. Your registration is shown read-only.`)}
-    ${open && !data.isRegistered && alertBox('info', 'Core courses are compulsory. Add electives if you wish, then click Register.')}
+    ${notice}
+    ${data.courses.length < required &&
+      alertBox('error', `Only ${data.courses.length} courses are offered at your level. Please contact the faculty office.`)}
 
     <form id="reg-form" class="panel" novalidate>
       <h2 class="panel__head">Courses offered at your level</h2>
@@ -24,10 +37,10 @@ export async function registrationView(el, { message } = {}) {
             <tbody>
               ${data.courses.map((c) => {
                 const core = c.type === 'CORE';
-                const checked = core || c.registered;
+                const checked = data.isRegistered ? c.registered : core;
                 return html`<tr>
                   <td><input type="checkbox" id="c-${c.code}" value="${c.code}" data-credits="${c.credits}"
-                       ${checked ? raw('checked') : ''} ${core || !open ? raw('disabled') : ''}></td>
+                       ${checked ? raw('checked') : ''} ${core || !editable ? raw('disabled') : ''}></td>
                   <td><label for="c-${c.code}">${c.code}</label></td>
                   <td><label for="c-${c.code}">${c.name}</label></td>
                   <td>${core ? html`<span class="badge">Core</span>` : html`<span class="badge badge--muted">Elective</span>`}</td>
@@ -37,35 +50,44 @@ export async function registrationView(el, { message } = {}) {
             </tbody>
           </table>
         </div>
-        <p class="credits" aria-live="polite">Total credits: <strong id="credit-total">0</strong> / ${data.maxCredits}</p>
-        ${open && html`<button type="submit" class="btn btn--primary">${data.isRegistered ? 'Update Registration' : 'Register'}</button>`}
+        <p class="credits" aria-live="polite">
+          Selected: <strong id="count">0</strong> of ${required} courses · <span id="credit-total">0</span> credits
+        </p>
+        ${editable && html`<button type="submit" class="btn btn--primary">${data.isRegistered ? 'Update Registration' : 'Register'}</button>`}
       </div>
     </form>
   `);
 
   const form = el.querySelector('#reg-form');
   const boxes = [...form.querySelectorAll('input[type="checkbox"]')];
-  const total = el.querySelector('#credit-total');
-  const updateTotal = () => {
-    const credits = boxes.filter((b) => b.checked).reduce((s, b) => s + Number(b.dataset.credits), 0);
-    total.textContent = String(credits);
-    total.classList.toggle('over', credits > data.maxCredits);
+  const count = el.querySelector('#count');
+  const credits = el.querySelector('#credit-total');
+  const update = () => {
+    const ticked = boxes.filter((b) => b.checked);
+    count.textContent = String(ticked.length);
+    count.classList.toggle('over', ticked.length !== required);
+    credits.textContent = String(ticked.reduce((s, b) => s + Number(b.dataset.credits), 0));
   };
-  updateTotal();
-  form.addEventListener('change', updateTotal);
+  update();
+  form.addEventListener('change', update);
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const courseCodes = boxes.filter((b) => b.checked).map((b) => b.value);
+    const errorBox = el.querySelector('#reg-error');
+    if (courseCodes.length !== required) {
+      mount(errorBox, alertBox('error', `Select exactly ${required} courses (you selected ${courseCodes.length}).`));
+      return;
+    }
     const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
-      const courseCodes = boxes.filter((b) => b.checked).map((b) => b.value);
       const res = await api('/registration', { method: 'POST', body: { courseCodes } });
       await registrationView(el, {
-        message: alertBox('success', `Registration saved for ${res.semester} (${res.credits} credits).`),
+        message: alertBox('success', `You are registered for ${required} courses in ${res.semester} (${res.credits} credits).`),
       });
     } catch (err) {
-      mount(el.querySelector('#reg-error'), alertBox('error', err.message));
+      mount(errorBox, alertBox('error', err.message));
       button.disabled = false;
     }
   });

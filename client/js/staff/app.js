@@ -7,20 +7,29 @@ import { resultsCaptureView } from './views/results.js';
 import { feeStructureView } from './views/fees.js';
 import { accountsView } from './views/accounts.js';
 import { auditView } from './views/audit.js';
+import { usersView } from './views/users.js';
+import { coursesView } from './views/courses.js';
+import { systemView } from './views/system.js';
 
 const NAV = [
   { route: 'dashboard', label: 'Staff Dashboard', icon: 'dashboard' },
-  { route: 'results', label: 'Capture Results', icon: 'book', roles: ['ACADEMIC'] },
+  { route: 'results', label: 'Upload Marks', icon: 'book', roles: ['ACADEMIC'] },
   { route: 'fees', label: 'Fee Structure', icon: 'file', roles: ['BURSARY'] },
   { route: 'accounts', label: 'Student Accounts', icon: 'bank', roles: ['BURSARY'] },
+  { route: 'users', label: 'Manage Users', icon: 'users', roles: ['ADMIN'] },
+  { route: 'courses', label: 'Manage Courses', icon: 'list', roles: ['ADMIN'] },
+  { route: 'system', label: 'System Information', icon: 'settings', roles: ['ADMIN'] },
   { route: 'audit', label: 'Activity Log', icon: 'history', roles: ['ADMIN'] },
 ];
 
 const ROUTES = {
   dashboard: [overviewView, 'Staff Dashboard'],
-  results: [resultsCaptureView, 'Capture Results'],
+  results: [resultsCaptureView, 'Upload Marks'],
   fees: [feeStructureView, 'Fee Structure'],
   accounts: [accountsView, 'Student Accounts'],
+  users: [usersView, 'Manage Users'],
+  courses: [coursesView, 'Manage Courses'],
+  system: [systemView, 'System Information'],
   audit: [auditView, 'Activity Log'],
 };
 

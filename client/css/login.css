@@ -106,7 +106,30 @@
 .btn--login:disabled { opacity: .7; cursor: progress; }
 
 .login-card__switch { margin: 1.75rem 0 -1rem; text-align: center; font-size: .95rem; }
+.login-card__switch--second { margin-top: 1.4rem; }
 .login-card__switch a { color: var(--blue); }
+
+/* ---- Sign-up form ------------------------------------------------------------ */
+.login-main--tall { place-items: start center; }
+.signup-card { width: min(100%, 820px); }
+.signup-card__intro { margin: -.5rem 0 1rem; color: var(--muted); }
+.signup-card fieldset { border: 0; border-top: 1px solid #e3e7ec; margin: 0; padding: 1rem 0 .25rem; }
+.signup-card legend { padding-right: .5rem; font-weight: 700; color: var(--navy); }
+.field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 1.25rem; }
+.signup-card label { display: block; font-weight: 600; font-size: .95rem; }
+.signup-card input, .signup-card select {
+  display: block;
+  width: 100%;
+  margin: .3rem 0 1rem;
+  padding: .7rem .8rem;
+  border: 1px solid #d5dbe3;
+  border-radius: 5px;
+  background: #e8f0fe;
+  font-size: 1rem;
+  font-weight: 400;
+}
+.signup-card input:focus, .signup-card select:focus { outline: 2px solid var(--login-btn); outline-offset: 0; }
+.signup-card__hint { margin: -.5rem 0 0; font-size: .88rem; color: var(--muted); }
 
 /* ---- Landing page: choose student or staff portal ---------------------------- */
 .chooser {
@@ -176,6 +199,7 @@
   .login-card h2 { font-size: 1.5rem; }
   .btn--login { font-size: 1.25rem; }
   .chooser__title { font-size: 1.3rem; }
+  .field-grid { grid-template-columns: 1fr; }
   .chooser__list { grid-template-columns: 1fr; gap: .9rem; }
   .portal-card { padding: 1.1rem; }
   .portal-card__icon { width: 36px; height: 36px; }

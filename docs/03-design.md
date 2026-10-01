@@ -152,7 +152,48 @@ inside a transaction. Existing databases upgrade without losing data. Existing r
 
 New status code: **403** = logged in but not allowed.
 
-## 3.7 Security design
+## 3.7 v0.3 design — accounts, six courses, remarks, administration
+
+### Access privileges by role
+| Function | Student | Lecturer | Bursary | Admin |
+|----------|:-:|:-:|:-:|:-:|
+| Create own account, log in | ✔ | log in | log in | log in |
+| Register six courses, view own marks/remark | ✔ | | | |
+| Upload/update/publish marks | | own courses only | | all courses |
+| Fees, accounts, bank deposits | own quote/payments | | ✔ | ✔ |
+| Manage users / courses / system information | | | | ✔ |
+| Activity log | | | | ✔ |
+
+### Overall remark — where it is calculated
+`lib/remarks.js` → `overallRemark(courses)` is a **pure function** (no database), unit-tested on every
+boundary. `lib/results.js` builds each semester's six courses (registered courses + published results; a
+course with no published mark counts as pending) and attaches the remark. Both the results page and the
+dashboard use the same function, so the remark can never disagree between pages.
+
+### Schema changes — migration `002_accounts_courses_settings.sql`
+- `students.is_active` — admins can deactivate accounts (checked on every request)
+- `courses.lecturer_id → staff.id` — who may mark the course
+- `settings(key, value)` — announcement and help desk contact
+
+### New API
+| Method | Path | Who | Description |
+|--------|------|-----|-------------|
+| GET | `/api/public/programmes` | anyone | Programmes and levels that offer ≥ 6 courses (sign-up form) |
+| POST | `/api/auth/signup` | anyone | Create a student account and log in |
+| GET/POST | `/api/registration` | student | Now requires exactly six courses; `locked` once marks exist |
+| GET | `/api/results` | student | Each semester now has `remark: {code, text, failed}` |
+| GET | `/api/staff/results/options` | lecturer | Only the lecturer's own courses (`onlyMine`) |
+| GET | `/api/staff/manage/users` | admin | Students and staff |
+| POST | `/api/staff/manage/staff` | admin | Add staff member |
+| PATCH | `/api/staff/manage/staff/:number` · `/students/:number` | admin | Role / active / level |
+| POST | `/api/staff/manage/{students\|staff}/:number/password` | admin | Reset password |
+| GET/POST | `/api/staff/manage/courses` | admin | List / add courses |
+| PUT/DELETE | `/api/staff/manage/courses/:code` | admin | Edit (incl. lecturer) / delete if unused |
+| GET | `/api/staff/manage/system` | admin | Semesters, settings, statistics, versions |
+| PUT | `/api/staff/manage/settings` | admin | Announcement, help desk contact |
+| POST/PATCH | `/api/staff/manage/semesters[/:id]` | admin | Add semester / set current / open-close registration |
+
+## 3.8 Security design
 | Threat | Control |
 |--------|---------|
 | Password theft from DB | bcrypt (cost 10) |
@@ -165,4 +206,8 @@ New status code: **403** = logged in but not allowed.
 | Clickjacking | `X-Frame-Options: DENY`, `frame-ancestors 'none'` |
 | IDOR | Every student query filters by `req.session.studentId`, never by an ID from the client |
 | Privilege escalation | `requireStaff(role)` on every staff route; student sessions can't reach `/api/staff` |
+| Lecturer marking someone else's course | `loadCourseForMarking()` checks `courses.lecturer_id` on view, save and publish (403) |
+| Mass fake sign-ups / student-number probing | 5 sign-up attempts per IP per hour; strict format validation |
+| Admin lock-out | An admin cannot deactivate or demote their own account |
+| Passwords in logs | Password resets are audited without the password |
 | Repudiation ("I didn't change that mark") | `audit_log` + `updated_by` / `recorded_by` columns, written in the same transaction as the change |

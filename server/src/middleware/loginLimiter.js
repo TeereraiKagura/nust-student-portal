@@ -32,4 +32,27 @@ function createLoginLimiter({ max = 5, windowMs = 15 * 60 * 1000 } = {}) {
   };
 }
 
-module.exports = { createLoginLimiter };
+/**
+ * Counts every request (not just failures): after `max` requests from one IP within the
+ * window, further requests are refused. Used for account creation to stop mass sign-ups.
+ */
+function createRequestLimiter({ max, windowMs, message }) {
+  const hits = new Map(); // ip -> { count, firstAt }
+
+  return function requestLimiter(req, res, next) {
+    const now = Date.now();
+    let entry = hits.get(req.ip);
+    if (!entry || now - entry.firstAt > windowMs) {
+      entry = { count: 0, firstAt: now };
+      hits.set(req.ip, entry);
+    }
+    if (entry.count >= max) {
+      res.set('Retry-After', String(Math.ceil((entry.firstAt + windowMs - now) / 1000)));
+      return res.status(429).json({ error: message });
+    }
+    entry.count += 1;
+    next();
+  };
+}
+
+module.exports = { createLoginLimiter, createRequestLimiter };

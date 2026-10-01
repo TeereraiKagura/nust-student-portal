@@ -1,6 +1,7 @@
 import { api } from '../api.js';
 import { icon } from '../icons.js';
 import { html, mount, formatDate } from '../util.js';
+import { remarkBox } from './academics.js';
 
 const TILES = [
   { href: '#/fees', color: 'green', icon: 'file', title: 'Get Fees Quote', text: 'Get your fees invoice.' },
@@ -23,9 +24,11 @@ function registrationBanner(semester, isRegistered) {
 }
 
 export async function dashboardView(el) {
-  const { student: s, semester, courses } = await api('/me/dashboard');
+  const { student: s, semester, courses, announcement, latestRemark } = await api('/me/dashboard');
 
   mount(el, html`
+    ${announcement && html`<div class="announcement" role="note"><strong>Announcement:</strong> ${announcement}</div>`}
+
     <section class="tiles" aria-label="Quick services">
       ${TILES.map((t) => html`
         <a class="tile tile--${t.color}" href="${t.href}">
@@ -36,6 +39,9 @@ export async function dashboardView(el) {
     </section>
 
     ${registrationBanner(semester, courses.length > 0)}
+
+    ${latestRemark && html`<a class="remark-link" href="#/results">
+      ${remarkBox(latestRemark, { heading: `Latest overall remark · ${latestRemark.semester}` })}</a>`}
 
     <div class="grid-2">
       <section class="panel">
@@ -50,7 +56,7 @@ export async function dashboardView(el) {
               Phone Number: ${s.phone}<br>
               Gender: ${s.gender}<br>
               Date Of Birth: ${s.dateOfBirth ? formatDate(s.dateOfBirth) : '—'}<br>
-              Place Of Birth: ${s.placeOfBirth}<br>
+              Place Of Birth: ${s.placeOfBirth ?? '—'}<br>
               Student Number: ${s.studentNumber}<br>
               Programme: ${s.programme.name} (Level ${s.level})
             </p>

@@ -24,8 +24,18 @@ router.get('/overview', (req, res) => {
            FROM students s LEFT JOIN (${paidByStudent}) p ON p.student_id = s.id) AS outstanding`)
     .get({ sem: semester.id, total: feeTotal });
 
+  // Lecturers get the list of courses they teach, with this semester's class size and drafts.
+  const myCourses = req.staff.role === 'ACADEMIC'
+    ? db.prepare(`SELECT c.code, c.name, c.level,
+                         (SELECT COUNT(*) FROM registrations r WHERE r.course_code = c.code AND r.semester_id = @sem) AS students,
+                         (SELECT COUNT(*) FROM results r WHERE r.course_code = c.code AND r.semester_id = @sem AND r.published = 0) AS drafts
+                  FROM courses c WHERE c.lecturer_id = @me ORDER BY c.level, c.code`)
+      .all({ sem: semester.id, me: req.staff.id })
+    : null;
+
   res.json({
     semester: { id: semester.id, label: semester.label },
+    myCourses,
     stats: {
       students: stats.students,
       draftResults: stats.draftResults,

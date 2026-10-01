@@ -34,18 +34,36 @@ Copy `server/.env.example` to `server/.env` and change `SESSION_SECRET` before d
 
 | Student number | Password      | Scenario                                              |
 |----------------|---------------|-------------------------------------------------------|
-| `N01234567A`   | `Portal@2026` | Level 2.1, already registered, has results & payments |
-| `N07654321B`   | `Portal@2026` | Level 1.1, **not yet registered** — try registration  |
+| `N01234567A`   | `Portal@2026` | Level 2.1, registered for six courses; past remarks **PASS** and **PROCEED CARRYING SMA1201** |
+| `N07654321B`   | `Portal@2026` | Level 1.1, **not yet registered** — try registering six courses |
+| `N05555555C`   | `Portal@2026` | Level 1.1, past remark **REPEAT SCS1101, SCS1102, SMA1101** |
+
+New students can also **create their own account** from the Student Portal login page.
 
 Staff accounts (password `Staff@2026` for all) — choose **Staff Portal** on the landing page:
 
 | Staff number | Role          | Can do                                         |
 |--------------|---------------|------------------------------------------------|
-| `S2001`      | Lecturer      | Capture and publish results                    |
+| `S2001`      | Lecturer      | Upload/update marks for **his** Computer Science courses |
+| `S2002`      | Lecturer      | Upload/update marks for **her** Maths, Statistics and general courses |
 | `S3001`      | Bursary       | Fee structure, student balances, bank deposits |
-| `S1001`      | Administrator | Everything, plus the activity log              |
+| `S1001`      | Administrator | Manage users, courses and system information; everything else; activity log |
 
 ## Features
+
+### v0.3 — coursework brief: accounts, six courses, overall remark
+- **Students create accounts** (validated sign-up form, rate-limited) and **register for exactly six courses**
+  (core courses compulsory; locked once marks are entered)
+- **Overall remark** calculated automatically from a semester's six courses (`server/src/lib/remarks.js`):
+  - all passed → **PASS**
+  - 1–2 failed → **PROCEED CARRYING** + failed course codes
+  - 3+ failed → **REPEAT** + failed course codes
+  - **PENDING** until all six results are published
+- Students see individual marks, failed courses (highlighted) and the remark, on the results page and dashboard
+- **Lecturers** upload/update marks only for **the courses assigned to them** — typed in or **uploaded from CSV**
+- **Administrators** manage **users** (create staff, roles, activate/deactivate, reset passwords, student levels),
+  **courses** (add/edit/delete, assign lecturers) and **system information** (semesters, registration open/closed,
+  announcement, help desk contact, statistics)
 
 ### Staff portal (v0.2)
 - Role-based access (Lecturer / Bursary / Administrator), enforced by the server on every request
@@ -59,10 +77,10 @@ Staff accounts (password `Staff@2026` for all) — choose **Staff Portal** on th
 
 - Login page styled after the real portal
 - Dashboard: service tiles, registration banner, personal details, registered courses
-- New Registration (core courses enforced, credit limit, only while registration is open)
+- New Registration — exactly six courses, core courses compulsory, only while registration is open
 - Printable fees quote with live balance
 - Simulated payments (EcoCash, FBC online) and payments history
-- Examination results with grades and credit-weighted averages
+- Examination results with grades, failed courses, credit-weighted averages and the overall remark
 - Continuous assessment marks
 - Printable exams timetable
 - Messages with unread badge, enquiries, change password
@@ -76,6 +94,7 @@ nust-student-portal/
 ├── client/      Frontend (static files served by Express)
 │   ├── index.html           Landing page: choose Student or Staff portal
 │   ├── student.html         Student login
+│   ├── signup.html          Student self-registration
 │   ├── dashboard.html       Student portal (single-page app, hash routing)
 │   ├── staff.html           Staff login
 │   ├── staff-portal.html    Staff portal
@@ -89,11 +108,11 @@ nust-student-portal/
     │   ├── app.js           Express app factory (used by tests too)
     │   ├── db.js            Opens DB, applies schema.sql then migrations/
     │   ├── schema.sql       Baseline schema (v0.1)
-    │   ├── migrations/      Numbered upgrades (001 = staff, publishing, audit log)
+    │   ├── migrations/      Numbered upgrades (001 = staff, publishing, audit log; 002 = accounts, lecturers, settings)
     │   ├── seed.js
-    │   ├── lib/             Pure rules and helpers (grading, registration, money, fees, passwords, audit)
+    │   ├── lib/             Pure rules and helpers (grading, remarks, registration, results, money, fees, passwords, audit, validation)
     │   ├── middleware/      requireAuth / requireStaff(role), login limiter, security headers
-    │   └── routes/          student routes + routes/staff/ (auth, results, finance, admin)
+    │   └── routes/          student routes + routes/staff/ (auth, results, finance, admin, manage)
     └── test/                rules, student API, staff API
 ```
 

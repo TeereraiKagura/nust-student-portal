@@ -1,5 +1,7 @@
 const express = require('express');
 const { currentSemester } = require('../db');
+const { studentResults } = require('../lib/results');
+const { getSettings } = require('../lib/settings');
 
 const router = express.Router();
 
@@ -41,7 +43,17 @@ router.get('/dashboard', (req, res) => {
               ORDER BY c.code`)
     .all(id, semester.id);
 
-  res.json({ student: toProfile(student), semester: semesterDto(semester), courses });
+  // The most recent semester whose six results are all published.
+  const finished = studentResults(req.db, id).semesters.filter((s) => s.remark.code !== 'PENDING');
+  const latest = finished.at(-1);
+
+  res.json({
+    student: toProfile(student),
+    semester: semesterDto(semester),
+    courses,
+    announcement: getSettings(req.db).announcement,
+    latestRemark: latest ? { semester: latest.label, ...latest.remark } : null,
+  });
 });
 
 module.exports = { studentRouter: router, semesterDto };

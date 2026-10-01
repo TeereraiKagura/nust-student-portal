@@ -315,6 +315,58 @@
 
 .tiles--staff { grid-template-columns: repeat(auto-fit, minmax(200px, 260px)); justify-content: start; margin-bottom: 2rem; }
 
+/* ---- v0.3: overall remark, announcement, uploads, admin --------------------- */
+.remark {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .25rem 1rem;
+  margin-bottom: 1rem;
+  padding: .9rem 1.1rem;
+  border-left: 6px solid;
+  border-radius: 3px;
+}
+.remark__label { width: 100%; font-size: .85rem; text-transform: uppercase; letter-spacing: .04em; opacity: .85; }
+.remark__text { font-size: 1.35rem; letter-spacing: .02em; }
+.remark__failed { font-weight: 600; }
+.remark--pass { background: var(--success-bg); color: var(--success-text); border-color: #3c8d2f; }
+.remark--proceed { background: #fcf3cf; color: #6b4f00; border-color: #d9a200; }
+.remark--repeat { background: var(--danger-bg); color: var(--danger-text); border-color: #c0392b; }
+.remark--pending { background: #eef1f4; color: #4b5563; border-color: #9aa5b1; }
+.remark-link { display: block; text-decoration: none; margin-bottom: 2rem; }
+.remark-link .remark { margin: 0; }
+.remark-link:hover .remark { filter: brightness(.97); }
+.table tr.row--failed td { background: #fdf0f0; }
+
+.announcement {
+  margin-bottom: 1.5rem;
+  padding: .9rem 1.1rem;
+  background: #e0f2f7;
+  border-left: 6px solid var(--teal);
+  color: #12465a;
+  font-size: 1.05rem;
+}
+
+.upload-bar { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-bottom: 1rem; }
+.upload-label { cursor: pointer; }
+.upload-label:focus-within { outline: 3px solid #ffbf47; outline-offset: 2px; }
+.mark-input--filled { background: #fff7d6; border-color: #d9a200; }
+.tight { margin: .3rem 0 0; padding-left: 1.2rem; }
+
+.tabs { display: flex; gap: .25rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border); }
+.tabs a {
+  padding: .6rem 1.1rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+.tabs a[aria-current="page"] { color: var(--navy); border-bottom-color: var(--navy); }
+.input--short { width: 6.5rem; }
+.level-summary { margin: 0 0 .4rem; }
+.credits .over { color: var(--danger-text); }
+
 /* ---- Responsive ------------------------------------------------------------- */
 @media (max-width: 1400px) {
   .tiles { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1.25rem; margin-bottom: 3rem; }

@@ -16,7 +16,7 @@ function verifyPassword(password, hash) {
 
 function passwordPolicyError(password) {
   if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-    return 'New password must be at least 8 characters and contain letters and numbers.';
+    return 'Password must be at least 8 characters and contain letters and numbers.';
   }
   return null;
 }

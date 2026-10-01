@@ -8,6 +8,8 @@ const { staffAuthRouter } = require('./routes/staff/auth');
 const { staffResultsRouter } = require('./routes/staff/results');
 const { staffFeesRouter, staffAccountsRouter } = require('./routes/staff/finance');
 const { staffAdminRouter } = require('./routes/staff/admin');
+const { staffManageRouter } = require('./routes/staff/manage');
+const { publicRouter } = require('./routes/public');
 const { studentRouter } = require('./routes/student');
 const { academicsRouter } = require('./routes/academics');
 const { financeRouter } = require('./routes/finance');
@@ -47,9 +49,14 @@ function createApp({ db, sessionSecret, isProduction = false }) {
   // Used by the hosting platform to check the app is up.
   app.get('/api/health', (req, res) => res.json({ ok: true }));
 
+  // No login needed: programme/level lists for the sign-up form.
+  app.use('/api/public', publicRouter);
+
   // ---- Staff API (mounted before the student catch-all below) ----
-  // Each area is guarded by role: ACADEMIC → results, BURSARY → fees/accounts, ADMIN → everything.
+  // Each area is guarded by role: ACADEMIC → results, BURSARY → fees/accounts,
+  // ADMIN → everything, including user/course/system management.
   app.use('/api/staff/auth', staffAuthRouter());
+  app.use('/api/staff/manage', requireStaff('ADMIN'), staffManageRouter);
   app.use('/api/staff/results', requireStaff('ACADEMIC'), staffResultsRouter);
   app.use('/api/staff/fees', requireStaff('BURSARY'), staffFeesRouter);
   app.use('/api/staff/accounts', requireStaff('BURSARY'), staffAccountsRouter);
@@ -70,7 +77,7 @@ function createApp({ db, sessionSecret, isProduction = false }) {
     if (req.session.staffId) return res.redirect('/staff-portal.html');
     next();
   };
-  app.get(['/', '/index.html', '/student.html', '/staff.html'], toOwnPortal);
+  app.get(['/', '/index.html', '/student.html', '/signup.html', '/staff.html'], toOwnPortal);
   app.get('/dashboard.html', (req, res, next) => (req.session.studentId ? next() : res.redirect('/student.html')));
   app.get('/staff-portal.html', (req, res, next) => (req.session.staffId ? next() : res.redirect('/staff.html')));
   app.use(express.static(CLIENT_DIR));

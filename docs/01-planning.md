@@ -36,7 +36,9 @@ feedback arrives as you go.
 |-----------|------|
 | v0.1 ✅ | End-to-end working prototype: every sidebar item and tile works on demo data |
 | v0.2 ✅ | Staff portal: results capture/publishing, fee structure, student accounts, audit log; confirmed grading scale |
-| v0.3 | Hardening: persistent session store, password reset, accessibility audit, deployment |
+| v0.2.1 ✅ | Landing page; deployed to Render |
+| v0.3 ✅ | Coursework brief: student sign-up, exactly six courses, automatic overall remark (PASS / PROCEED CARRYING / REPEAT), lecturers mark only their own courses (with CSV upload), admin management of users, courses and system information |
+| v0.4 | Hardening: persistent session store, password reset by email, accessibility audit |
 
 ## 1.6 Risks
 | Risk | Mitigation |

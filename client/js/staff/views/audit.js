@@ -9,6 +9,16 @@ const ACTION_LABELS = {
   FEE_UPDATED: 'Fee updated',
   FEE_DELETED: 'Fee deleted',
   PAYMENT_RECORDED: 'Payment recorded',
+  STAFF_CREATED: 'Staff member added',
+  STAFF_UPDATED: 'Staff member updated',
+  STUDENT_UPDATED: 'Student updated',
+  PASSWORD_RESET: 'Password reset',
+  COURSE_ADDED: 'Course added',
+  COURSE_UPDATED: 'Course updated',
+  COURSE_DELETED: 'Course deleted',
+  SETTINGS_UPDATED: 'Settings updated',
+  SEMESTER_ADDED: 'Semester added',
+  SEMESTER_UPDATED: 'Semester updated',
 };
 
 export async function auditView(el) {

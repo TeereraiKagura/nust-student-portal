@@ -1,7 +1,14 @@
-/** Blocks API requests that don't come from a logged-in student. */
+/**
+ * Blocks API requests that don't come from a logged-in, active student.
+ * The account is re-checked on every request, so a deactivated student is locked out at once.
+ */
 function requireAuth(req, res, next) {
   if (!req.session.studentId) {
     return res.status(401).json({ error: 'Your session has expired. Please log in again.' });
+  }
+  const student = req.db.prepare('SELECT is_active FROM students WHERE id = ?').get(req.session.studentId);
+  if (!student || !student.is_active) {
+    return res.status(401).json({ error: 'Your account is not active.' });
   }
   next();
 }

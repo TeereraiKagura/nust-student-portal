@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Student Account | NUST</title>
+  <link rel="icon" href="img/crest.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body class="login-page" data-login-page="/student.html">
+  <header class="login-header">
+    <img class="login-header__crest" src="img/crest.svg" alt="University crest">
+    <h1>National University of Science and Technology</h1>
+  </header>
+
+  <main class="login-main login-main--tall">
+    <form id="signup-form" class="login-card signup-card" novalidate>
+      <h2>Create Student Account</h2>
+      <p class="signup-card__intro">Use the student number on your offer letter. Fields marked * are required.</p>
+      <div id="signup-error" class="alert alert--error" role="alert" hidden></div>
+
+      <fieldset>
+        <legend>Your details</legend>
+        <div class="field-grid">
+          <label>Student number *
+            <input name="studentNumber" placeholder="N01234567A" autocomplete="username"
+                   autocapitalize="characters" spellcheck="false" pattern="[Nn][0-9]{8}[A-Za-z]" required>
+          </label>
+          <label>National ID *
+            <input name="nationalId" placeholder="63-123456A07" autocapitalize="characters" spellcheck="false" required>
+          </label>
+          <label>First name *
+            <input name="firstName" autocomplete="given-name" maxlength="50" required>
+          </label>
+          <label>Last name *
+            <input name="lastName" autocomplete="family-name" maxlength="50" required>
+          </label>
+          <label>Gender *
+            <select name="gender" required>
+              <option value="">Choose…</option>
+              <option>Female</option>
+              <option>Male</option>
+            </select>
+          </label>
+          <label>Date of birth *
+            <input name="dateOfBirth" type="date" autocomplete="bday" required>
+          </label>
+          <label>Place of birth
+            <input name="placeOfBirth" maxlength="100">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Contact</legend>
+        <div class="field-grid">
+          <label>Email *
+            <input name="email" type="email" autocomplete="email" maxlength="100" required>
+          </label>
+          <label>Mobile number *
+            <input name="phone" type="tel" inputmode="tel" placeholder="0771234567" autocomplete="tel" required>
+          </label>
+          <label>Street address
+            <input name="addressLine1" autocomplete="address-line1" maxlength="100">
+          </label>
+          <label>Suburb, city
+            <input name="addressLine2" autocomplete="address-level2" maxlength="100">
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Programme</legend>
+        <div class="field-grid">
+          <label>Programme *
+            <select name="programmeCode" required><option value="">Loading…</option></select>
+          </label>
+          <label>Level *
+            <select name="level" required><option value="">Choose a programme first</option></select>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Password</legend>
+        <div class="field-grid">
+          <label>Password *
+            <input name="password" type="password" autocomplete="new-password" minlength="8" required
+                   aria-describedby="pw-hint">
+          </label>
+          <label>Confirm password *
+            <input name="confirm" type="password" autocomplete="new-password" required>
+          </label>
+        </div>
+        <p id="pw-hint" class="signup-card__hint">At least 8 characters, with letters and numbers.</p>
+      </fieldset>
+
+      <button type="submit" class="btn--login">Create Account</button>
+      <p class="login-card__switch"><a href="/student.html">Already have an account? Log in</a></p>
+    </form>
+  </main>
+
+  <footer class="login-footer">
+    Coursework prototype for learning purposes — not affiliated with NUST. Demo data only.
+  </footer>
+
+  <script type="module" src="js/signup.js"></script>
+</body>
+</html>

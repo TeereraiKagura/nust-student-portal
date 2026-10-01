@@ -45,7 +45,32 @@ dashboard (tiles, sidebar, personal details, registered courses), and the *Stude
 | FR23 | Every staff change is written to an activity log that only administrators can view | Admin | Done |
 | FR24 | Each role sees only its own menu items; the server rejects other actions with 403 | All staff | Done |
 
-Simplification: any lecturer may capture marks for any course (no lecturer ↔ course assignment yet).
+### v0.3 — Coursework brief
+> *"Students create accounts, securely log in, register for six courses, and view their academic results.
+> Lecturers securely log in and upload/update marks for the six courses; administrators manage users,
+> courses, and system information. … The system must automatically calculate and display the
+> student's overall result based on the six courses."*
+
+| ID | Requirement | Role | Status |
+|----|-------------|------|--------|
+| FR25 | A student creates their own account (student number, personal details, programme, level, password); all fields validated; duplicate student numbers refused; max 5 sign-ups per network per hour | Student | Done |
+| FR6 (revised) | A student registers for **exactly six** courses at their level; core courses are compulsory; registration is locked once marks exist | Student | Done |
+| FR26 | The system calculates the overall remark per semester from the six courses (BR5) | System | Done |
+| FR27 | The student sees individual marks, failed courses and the overall remark (results page + dashboard) | Student | Done |
+| FR28 | Each course is assigned to one lecturer; a lecturer can only view, upload, update and publish marks for their own courses | Lecturer | Done |
+| FR29 | Lecturers can upload marks from a CSV file (and download the class list as a template) | Lecturer | Done |
+| FR30 | Admin manages users: create staff, change role, activate/deactivate staff and students, reset passwords, change a student's level; an admin cannot deactivate or demote themselves | Admin | Done |
+| FR31 | Admin manages courses: add, edit, delete (only if unused), assign lecturer | Admin | Done |
+| FR32 | Admin manages system information: semesters (add, set current, open/close registration), dashboard announcement, help desk contact; views statistics and versions | Admin | Done |
+
+### BR5 — Overall remark (from the brief)
+A course is **failed** when its mark is below 50 (grade F on BR1).
+| Failed courses out of six | Remark |
+|---|---|
+| 0 | **PASS** |
+| 1 or 2 | **PROCEED CARRYING** + failed course codes, e.g. `PROCEED CARRYING SMA1201` |
+| 3 or more | **REPEAT** + failed course codes, e.g. `REPEAT SCS1101, SCS1102, SMA1101` |
+| any result not yet published | **PENDING — n of 6 results available** (design decision: a remark "based on the six courses" can't be final before all six are known) |
 
 ### Business rules
 - **BR1 Grading scale** (confirmed by the student; configured in `server/src/lib/grading.js`):

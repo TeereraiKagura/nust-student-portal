@@ -1,7 +1,7 @@
 const express = require('express');
 const { currentSemester } = require('../db');
-const { gradeFor, weightedAverage } = require('../lib/grading');
-const { MAX_CREDITS, validateSelection } = require('../lib/registrationRules');
+const { COURSES_REQUIRED, validateSelection } = require('../lib/registrationRules');
+const { studentResults } = require('../lib/results');
 const { semesterDto } = require('./student');
 
 const router = express.Router();
@@ -23,6 +23,13 @@ function registeredCodes(db, studentId, semesterId) {
     .map((r) => r.course_code);
 }
 
+/** Once any mark exists for the semester, the student's six courses are fixed. */
+function hasMarks(db, studentId, semesterId) {
+  return db
+    .prepare('SELECT 1 FROM results WHERE student_id = ? AND semester_id = ? LIMIT 1')
+    .get(studentId, semesterId) !== undefined;
+}
+
 // ---- Registration -------------------------------------------------------
 
 router.get('/registration', (req, res) => {
@@ -32,8 +39,9 @@ router.get('/registration', (req, res) => {
 
   res.json({
     semester: semesterDto(semester),
-    maxCredits: MAX_CREDITS,
+    required: COURSES_REQUIRED,
     isRegistered: registered.size > 0,
+    locked: hasMarks(req.db, id, semester.id),
     courses: availableCourses(req.db, id).map((c) => ({ ...c, registered: registered.has(c.code) })),
   });
 });
@@ -43,6 +51,9 @@ router.post('/registration', (req, res) => {
   const semester = currentSemester(req.db);
   if (!semester.registration_open) {
     return res.status(409).json({ error: `Registration for ${semester.label} is closed.` });
+  }
+  if (hasMarks(req.db, id, semester.id)) {
+    return res.status(409).json({ error: 'Marks have already been entered for your courses, so your registration can no longer be changed.' });
   }
 
   const { courseCodes } = req.body ?? {};
@@ -68,33 +79,9 @@ router.post('/registration', (req, res) => {
 
 // ---- Results --------------------------------------------------------------
 
+// Marks, failed courses and the overall remark (PASS / PROCEED CARRYING / REPEAT) per semester.
 router.get('/results', (req, res) => {
-  const rows = req.db
-    .prepare(`SELECT r.semester_id, sm.label, r.course_code AS code, c.name, c.credits, r.mark
-              FROM results r
-              JOIN courses c    ON c.code = r.course_code
-              JOIN semesters sm ON sm.id = r.semester_id
-              WHERE r.student_id = ? AND r.published = 1
-              ORDER BY sm.starts_on, r.course_code`)
-    .all(req.session.studentId);
-
-  const semesters = [];
-  for (const row of rows) {
-    let sem = semesters.find((s) => s.id === row.semester_id);
-    if (!sem) {
-      sem = { id: row.semester_id, label: row.label, courses: [] };
-      semesters.push(sem);
-    }
-    const { grade, description } = gradeFor(row.mark);
-    sem.courses.push({ code: row.code, name: row.name, credits: row.credits, mark: row.mark, grade, description });
-  }
-  for (const sem of semesters) sem.average = weightedAverage(sem.courses);
-
-  const overall = weightedAverage(rows);
-  res.json({
-    semesters,
-    overall: overall === null ? null : { average: overall, classification: gradeFor(overall).description },
-  });
+  res.json(studentResults(req.db, req.session.studentId));
 });
 
 // ---- Continuous assessment ----------------------------------------------

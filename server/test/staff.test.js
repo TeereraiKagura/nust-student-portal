@@ -44,11 +44,12 @@ test('migration upgrades a v0.1 database and keeps existing results visible', ()
   assert.equal(db.pragma('user_version', { simple: true }), 0);
 
   migrate(db);
-  assert.equal(db.pragma('user_version', { simple: true }), 1);
+  assert.equal(db.pragma('user_version', { simple: true }), 2); // every migration applied
   assert.equal(db.prepare('SELECT published FROM results').get().published, 1);
+  assert.equal(db.prepare('SELECT is_active FROM students').get().is_active, 1);
 
   migrate(db); // running again is a no-op
-  assert.equal(db.pragma('user_version', { simple: true }), 1);
+  assert.equal(db.pragma('user_version', { simple: true }), 2);
 });
 
 // ---- Auth and roles ------------------------------------------------------------
@@ -119,7 +120,8 @@ test('results: class list, draft is hidden from student until published, then st
 
   const student = await loginStudent(app);
   const before = await student.get('/api/results');
-  assert.equal(before.body.semesters.some((s) => s.id === CURRENT), false, 'draft must be hidden');
+  const draftCourse = before.body.semesters.find((s) => s.id === CURRENT).courses.find((c) => c.code === 'SCS2114');
+  assert.equal(draftCourse.mark, null, 'draft must be hidden');
 
   const unreadBefore = (await student.get('/api/auth/me')).body.unreadMessages;
   const pub = await lecturer.post('/api/staff/results/publish').send({ semesterId: CURRENT, courseCode: 'SCS2114' });
@@ -127,8 +129,10 @@ test('results: class list, draft is hidden from student until published, then st
 
   const after = await student.get('/api/results');
   const sem = after.body.semesters.find((s) => s.id === CURRENT);
-  assert.equal(sem.courses[0].mark, 78);
-  assert.equal(sem.courses[0].grade, '1');
+  const published = sem.courses.find((c) => c.code === 'SCS2114');
+  assert.equal(published.mark, 78);
+  assert.equal(published.grade, '1');
+  assert.equal(sem.remark.text, 'PENDING — 1 of 6 results available');
   assert.equal((await student.get('/api/auth/me')).body.unreadMessages, unreadBefore + 1);
 
   const again = await lecturer.post('/api/staff/results/publish').send({ semesterId: CURRENT, courseCode: 'SCS2114' });
@@ -149,7 +153,7 @@ test('results: editing a published mark sends it back to draft; blank removes it
 
   await lecturer.put('/api/staff/results').send(body(null));
   const cleared = await lecturer.get('/api/staff/results?semester=2025-26-S1&course=SCS1101');
-  assert.equal(cleared.body.students.length, 0); // not registered, no result → off the list
+  assert.deepEqual(cleared.body.students.map((s) => s.studentNumber), ['N05555555C']); // Tatenda: not registered, no result → off the list
 });
 
 test('results: validation', async () => {
@@ -228,8 +232,166 @@ test('overview totals', async () => {
   const { app } = setup();
   const admin = await loginStaff(app, 'S1001');
   const { stats } = (await admin.get('/api/staff/overview')).body;
-  assert.equal(stats.students, 2);
+  assert.equal(stats.students, 3);
   assert.equal(stats.feeTotalCents, 75000);
   assert.equal(stats.collectedCents, 40000);
-  assert.equal(stats.outstandingCents, 35000 + 75000);
+  assert.equal(stats.outstandingCents, 35000 + 75000 + 75000);
+});
+
+// ---- v0.3: lecturers mark only their own courses -------------------------------
+
+test('lecturer sees and marks only assigned courses; admin can mark any', async () => {
+  const { app } = setup();
+  const farai = await loginStaff(app, 'S2001'); // Computer Science courses
+  const rumbi = await loginStaff(app, 'S2002'); // Maths/Stats courses
+  const admin = await loginStaff(app, 'S1001');
+
+  const options = (await farai.get('/api/staff/results/options')).body;
+  const codes = options.courses.map((c) => c.code);
+  assert.ok(codes.includes('SCS2114'));
+  assert.ok(!codes.includes('SORS2110'));
+  assert.equal(options.onlyMine, true);
+
+  const mark = (agent, courseCode) => agent.put('/api/staff/results')
+    .send({ semesterId: CURRENT, courseCode, marks: [{ studentNumber: 'N01234567A', mark: 40 }] });
+
+  assert.equal((await farai.get(`/api/staff/results?semester=${CURRENT}&course=SORS2110`)).status, 403);
+  assert.equal((await mark(farai, 'SORS2110')).status, 403);
+  assert.equal((await farai.post('/api/staff/results/publish').send({ semesterId: CURRENT, courseCode: 'SORS2110' })).status, 403);
+
+  assert.equal((await mark(rumbi, 'SORS2110')).status, 200);
+  assert.equal((await mark(admin, 'SCS2104')).status, 200);
+  assert.ok((await admin.get('/api/staff/results/options')).body.courses.length > codes.length);
+
+  const overview = (await farai.get('/api/staff/overview')).body;
+  assert.ok(overview.myCourses.some((c) => c.code === 'SCS2114' && c.students === 1));
+});
+
+test('remark appears once all six courses are published', async () => {
+  const { app } = setup();
+  const farai = await loginStaff(app, 'S2001');
+  const rumbi = await loginStaff(app, 'S2002');
+  // Tatenda's six: SCS2104, SCS2108, SCS2111, SCS2114 (Farai); SCS2110, SORS2110 (Rumbidzai)
+  const marks = { SCS2104: 70, SCS2108: 45, SCS2111: 66, SCS2114: 80, SCS2110: 30, SORS2110: 55 };
+  for (const [courseCode, mark] of Object.entries(marks)) {
+    const agent = ['SCS2110', 'SORS2110'].includes(courseCode) ? rumbi : farai;
+    await agent.put('/api/staff/results').send({ semesterId: CURRENT, courseCode, marks: [{ studentNumber: 'N01234567A', mark }] });
+    await agent.post('/api/staff/results/publish').send({ semesterId: CURRENT, courseCode });
+  }
+  const student = await loginStudent(app);
+  const sem = (await student.get('/api/results')).body.semesters.find((s) => s.id === CURRENT);
+  assert.equal(sem.remark.text, 'PROCEED CARRYING SCS2108, SCS2110');
+});
+
+// ---- v0.3: administration ------------------------------------------------------
+
+test('admin only: lecturer and bursary cannot reach management APIs', async () => {
+  const { app } = setup();
+  for (const number of ['S2001', 'S3001']) {
+    const agent = await loginStaff(app, number);
+    assert.equal((await agent.get('/api/staff/manage/users')).status, 403, number);
+    assert.equal((await agent.get('/api/staff/manage/courses')).status, 403, number);
+    assert.equal((await agent.get('/api/staff/manage/system')).status, 403, number);
+  }
+  const student = await loginStudent(app);
+  assert.equal((await student.get('/api/staff/manage/users')).status, 401);
+});
+
+test('admin users: create staff, change role, deactivate, reset password, protect self', async () => {
+  const { app } = setup();
+  const admin = await loginStaff(app, 'S1001');
+
+  const newStaff = { staffNumber: 's2003', firstName: 'Tapiwa', lastName: 'Moyo', email: 'tapiwa@example.ac.zw', role: 'ACADEMIC', password: 'Lecturer2026' };
+  assert.equal((await admin.post('/api/staff/manage/staff').send(newStaff)).status, 201);
+  assert.equal((await admin.post('/api/staff/manage/staff').send(newStaff)).status, 409);
+  assert.equal((await admin.post('/api/staff/manage/staff').send({ ...newStaff, staffNumber: 'S2004', password: 'weak' })).status, 400);
+
+  const newLecturer = request.agent(app);
+  assert.equal((await newLecturer.post('/api/staff/auth/login').send({ staffNumber: 'S2003', password: 'Lecturer2026' })).status, 200);
+
+  // Changing Farai's role unassigns his courses.
+  const demote = await admin.patch('/api/staff/manage/staff/S2001').send({ role: 'BURSARY' });
+  assert.equal(demote.status, 200);
+  assert.ok(demote.body.unassignedCourses > 0);
+
+  // Deactivating ends access immediately.
+  assert.equal((await admin.patch('/api/staff/manage/staff/S2003').send({ isActive: false })).status, 200);
+  assert.equal((await newLecturer.get('/api/staff/overview')).status, 401);
+
+  // An admin cannot lock themselves out.
+  assert.equal((await admin.patch('/api/staff/manage/staff/S1001').send({ isActive: false })).status, 400);
+  assert.equal((await admin.patch('/api/staff/manage/staff/S1001').send({ role: 'BURSARY' })).status, 400);
+
+  // Password reset for a student.
+  assert.equal((await admin.post('/api/staff/manage/students/N07654321B/password').send({ newPassword: 'weak' })).status, 400);
+  assert.equal((await admin.post('/api/staff/manage/students/N07654321B/password').send({ newPassword: 'NewRudo2026' })).status, 200);
+  const rudo = request.agent(app);
+  assert.equal((await rudo.post('/api/auth/login').send({ studentNumber: 'N07654321B', password: 'NewRudo2026' })).status, 200);
+
+  // Deactivate a student, change a level.
+  assert.equal((await admin.patch('/api/staff/manage/students/N07654321B').send({ isActive: false })).status, 200);
+  assert.equal((await rudo.get('/api/me/dashboard')).status, 401);
+  assert.equal((await admin.patch('/api/staff/manage/students/N05555555C').send({ level: '9.9' })).status, 400);
+  assert.equal((await admin.patch('/api/staff/manage/students/N05555555C').send({ level: '1.2' })).status, 200);
+
+  const users = (await admin.get('/api/staff/manage/users')).body;
+  assert.equal(users.students.find((s) => s.studentNumber === 'N07654321B').isActive, false);
+  assert.equal(users.staff.find((s) => s.staffNumber === 'S1001').isMe, true);
+
+  const auditBody = (await admin.get('/api/staff/audit')).body;
+  const actions = auditBody.entries.map((e) => e.action);
+  assert.ok(actions.includes('STAFF_CREATED') && actions.includes('PASSWORD_RESET') && actions.includes('STUDENT_UPDATED'));
+  assert.ok(!JSON.stringify(auditBody).includes('NewRudo2026'), 'passwords are never logged');
+});
+
+test('admin courses: add, assign lecturer, edit, delete only when unused', async () => {
+  const { app } = setup();
+  const admin = await loginStaff(app, 'S1001');
+  const course = { code: 'scs2120', name: 'Cloud Computing', credits: 12, level: '2.1', type: 'ELECTIVE', programmeCode: 'BSCCS', lecturerNumber: 'S2002' };
+
+  assert.equal((await admin.post('/api/staff/manage/courses').send(course)).status, 201);
+  assert.equal((await admin.post('/api/staff/manage/courses').send(course)).status, 409);
+  assert.equal((await admin.post('/api/staff/manage/courses').send({ ...course, code: 'BAD' })).status, 400);
+  assert.equal((await admin.post('/api/staff/manage/courses').send({ ...course, code: 'SCS2121', lecturerNumber: 'S3001' })).status, 400); // bursary is not a lecturer
+  assert.equal((await admin.post('/api/staff/manage/courses').send({ ...course, code: 'SCS2122', credits: 0 })).status, 400);
+
+  const rumbi = await loginStaff(app, 'S2002');
+  assert.ok((await rumbi.get('/api/staff/results/options')).body.courses.some((c) => c.code === 'SCS2120'));
+
+  assert.equal((await admin.put('/api/staff/manage/courses/SCS2120').send({ ...course, name: 'Cloud Computing I', lecturerNumber: '' })).status, 200);
+  const updated = (await admin.get('/api/staff/manage/courses')).body.courses.find((c) => c.code === 'SCS2120');
+  assert.equal(updated.name, 'Cloud Computing I');
+  assert.equal(updated.lecturerNumber, null);
+
+  assert.equal((await admin.delete('/api/staff/manage/courses/SCS2120')).status, 204);
+  assert.equal((await admin.delete('/api/staff/manage/courses/SCS2114')).status, 409); // has registrations
+  assert.equal((await admin.delete('/api/staff/manage/courses/NOPE123')).status, 404);
+});
+
+test('admin system: settings, add semester, switch current, toggle registration', async () => {
+  const { app } = setup();
+  const admin = await loginStaff(app, 'S1001');
+
+  const system = (await admin.get('/api/staff/manage/system')).body;
+  assert.equal(system.system.schemaVersion, 2);
+  assert.equal(system.stats.students, 3);
+  assert.equal(system.semesters.filter((s) => s.isCurrent).length, 1);
+
+  assert.equal((await admin.put('/api/staff/manage/settings').send({ announcement: 'Graduation is on 20 November.' })).status, 200);
+  const student = await loginStudent(app);
+  assert.equal((await student.get('/api/me/dashboard')).body.announcement, 'Graduation is on 20 November.');
+  assert.equal((await admin.put('/api/staff/manage/settings').send({ announcement: 'x'.repeat(501) })).status, 400);
+
+  const sem = { id: '2026-27-S2', label: '2026/2027 Semester 2', startsOn: '2027-01-18', endsOn: '2027-06-04' };
+  assert.equal((await admin.post('/api/staff/manage/semesters').send(sem)).status, 201);
+  assert.equal((await admin.post('/api/staff/manage/semesters').send(sem)).status, 409);
+  assert.equal((await admin.post('/api/staff/manage/semesters').send({ ...sem, id: '2027-28-S1', endsOn: '2026-01-01' })).status, 400);
+
+  assert.equal((await admin.patch(`/api/staff/manage/semesters/${CURRENT}`).send({ registrationOpen: false })).status, 200);
+  assert.equal((await student.post('/api/registration').send({ courseCodes: [] })).status, 409); // closed
+
+  assert.equal((await admin.patch('/api/staff/manage/semesters/2026-27-S2').send({ isCurrent: true })).status, 200);
+  const after = (await admin.get('/api/staff/manage/system')).body.semesters;
+  assert.deepEqual(after.filter((s) => s.isCurrent).map((s) => s.id), ['2026-27-S2']);
+  assert.equal((await admin.patch('/api/staff/manage/semesters/2026-27-S2').send({ isCurrent: false })).status, 400);
 });

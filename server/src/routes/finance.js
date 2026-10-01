@@ -3,11 +3,11 @@ const express = require('express');
 const { currentSemester } = require('../db');
 const { feeSummary, METHOD_LABELS } = require('../lib/fees');
 const { parseAmountToCents } = require('../lib/money');
+const { ZIM_MOBILE } = require('../lib/validation');
 const { semesterDto } = require('./student');
 
 const router = express.Router();
 
-const ZIM_MOBILE = /^(?:\+263|0)7[1378]\d{7}$/; // Econet, NetOne and Telecel prefixes
 const ONLINE_METHODS = ['ECOCASH', 'FBC_ONLINE']; // BANK deposits are recorded by the bursary
 
 router.get('/fees/quote', (req, res) => {

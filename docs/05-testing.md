@@ -73,6 +73,28 @@ Run automated tests with `cd server && npm test`.
 | D3 | "Semesters completed" counted the in-progress semester once staff published current marks | Relabelled "Semesters with results" |
 | D4 | Client-side mark check had ambiguous `&&`/`\|\|` precedence | Added parentheses |
 
+### v0.3 — Coursework brief (49 automated tests, all passing)
+| Area | Tests |
+|------|-------|
+| Overall remark (unit) | PASS; 1 and 2 fails → PROCEED CARRYING + codes; 3 and 6 fails → REPEAT + codes; boundary 50 passes / 49 fails; PENDING with failures-so-far; empty list |
+| Six courses (unit + API) | exactly six accepted; 5 and 7 rejected; core missing rejected; duplicates counted once; locked once marks exist |
+| Results (API) | seeded PASS, PROCEED CARRYING SMA1201, REPEAT SCS1101, SCS1102, SMA1101; current semester PENDING 0 of 6; remark becomes final after the last of six courses is published |
+| Sign-up (API) | creates account + logs in + welcome message; email/phone normalised; password hashed; invalid student number, ID, email, phone, age, impossible date, level, weak password, `<script>` name rejected; duplicate 409; 6th attempt 429 |
+| Account status | deactivated student refused at login and logged out immediately |
+| Lecturer ownership | lecturer sees only own courses; 403 on view/save/publish of another lecturer's course; admin may mark any |
+| Admin | lecturer/bursary/student cannot reach management APIs; create staff (+duplicate 409, weak password 400); role change unassigns courses; deactivate ends session; self-protection; password reset (never logged); course add/edit/assign/delete (409 when used); settings; semesters add/current/registration |
+
+**Manual (browser), v0.3:** signed up as a new student → taken to registration → "you selected 5" refused →
+added one elective → registered for 6 (72 credits). Tatenda's results show PASS, PROCEED CARRYING SMA1201 (failed row
+highlighted) and PENDING; Kudzai's show REPEAT SCS1101, SCS1102, SMA1101 on results and dashboard. Lecturer S2001's
+menu shows only Upload Marks with his 14 courses; CSV upload filled the valid mark, skipped a non-numeric mark and a
+student not in the class, then saved as draft. Admin: all four management screens load; lecturer reassignment and
+announcement saved and appear in the activity log. No console errors.
+
+| ID | Defect | Fix |
+|----|--------|-----|
+| D5 | Sign-up validation test hit the sign-up rate limit (the limiter worked) | Each validation check uses a fresh app instance |
+
 ### v0.2.1 — Landing page
 | Test | Result |
 |------|--------|

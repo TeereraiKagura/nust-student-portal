@@ -14,6 +14,9 @@ function gradeFor(mark) {
   return GRADE_BANDS.find((band) => mark >= band.min);
 }
 
+/** A course is failed when its grade is F (below 50 on the current scale). */
+const isFail = (mark) => gradeFor(mark).grade === 'F';
+
 /** Credit-weighted average of [{ mark, credits }], rounded to 1 decimal place. */
 function weightedAverage(rows) {
   const totalCredits = rows.reduce((sum, r) => sum + r.credits, 0);
@@ -22,4 +25,4 @@ function weightedAverage(rows) {
   return Math.round((weighted / totalCredits) * 10) / 10;
 }
 
-module.exports = { GRADE_BANDS, gradeFor, weightedAverage };
+module.exports = { GRADE_BANDS, gradeFor, isFail, weightedAverage };

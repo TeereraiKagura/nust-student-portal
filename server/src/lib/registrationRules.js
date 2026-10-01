@@ -1,14 +1,15 @@
-const MAX_CREDITS = 84;
+// Every student registers for exactly six courses per semester (functional requirement FR6).
+const COURSES_REQUIRED = 6;
 
 /**
- * Validates a course selection (functional requirement FR6).
+ * Validates a course selection.
  * @param {Array<{code:string,type:string,credits:number}>} available courses the student may take
  * @param {string[]} selectedCodes course codes the student ticked
  * @returns {{ ok: true, credits: number } | { ok: false, error: string }}
  */
-function validateSelection(available, selectedCodes, maxCredits = MAX_CREDITS) {
+function validateSelection(available, selectedCodes, required = COURSES_REQUIRED) {
   if (!Array.isArray(selectedCodes) || selectedCodes.length === 0) {
-    return { ok: false, error: 'Select at least one course.' };
+    return { ok: false, error: `Select exactly ${required} courses.` };
   }
 
   const unique = [...new Set(selectedCodes)];
@@ -19,6 +20,10 @@ function validateSelection(available, selectedCodes, maxCredits = MAX_CREDITS) {
     return { ok: false, error: `Not available at your level: ${unknown.join(', ')}` };
   }
 
+  if (unique.length !== required) {
+    return { ok: false, error: `Select exactly ${required} courses (you selected ${unique.length}).` };
+  }
+
   const missingCore = available
     .filter((c) => c.type === 'CORE' && !unique.includes(c.code))
     .map((c) => c.code);
@@ -27,11 +32,7 @@ function validateSelection(available, selectedCodes, maxCredits = MAX_CREDITS) {
   }
 
   const credits = unique.reduce((sum, code) => sum + byCode.get(code).credits, 0);
-  if (credits > maxCredits) {
-    return { ok: false, error: `Too many credits (${credits}). The maximum is ${maxCredits}.` };
-  }
-
   return { ok: true, credits };
 }
 
-module.exports = { MAX_CREDITS, validateSelection };
+module.exports = { COURSES_REQUIRED, validateSelection };

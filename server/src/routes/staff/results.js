@@ -1,5 +1,6 @@
-// Results capture for lecturers (role ACADEMIC). Marks are saved as drafts and only
-// become visible to students when the course's results are published.
+// Results capture for lecturers (role ACADEMIC). A lecturer may only mark the courses
+// assigned to them; administrators may mark any course. Marks are saved as drafts and
+// only become visible to students when the course's results are published.
 const express = require('express');
 const { gradeFor } = require('../../lib/grading');
 const { audit } = require('../../lib/audit');
@@ -10,8 +11,24 @@ function findSemesterAndCourse(db, semesterId, courseCode) {
   const semester = typeof semesterId === 'string'
     ? db.prepare('SELECT id, label FROM semesters WHERE id = ?').get(semesterId) : undefined;
   const course = typeof courseCode === 'string'
-    ? db.prepare('SELECT code, name, level FROM courses WHERE code = ?').get(courseCode) : undefined;
+    ? db.prepare('SELECT code, name, level, lecturer_id FROM courses WHERE code = ?').get(courseCode) : undefined;
   return { semester, course };
+}
+
+const canMark = (staff, course) => staff.role === 'ADMIN' || course.lecturer_id === staff.id;
+
+/** Common checks for every route that reads or changes one course's marks. */
+function loadCourseForMarking(req, res, semesterId, courseCode) {
+  const { semester, course } = findSemesterAndCourse(req.db, semesterId, courseCode);
+  if (!semester || !course) {
+    res.status(404).json({ error: 'Choose a valid semester and course.' });
+    return null;
+  }
+  if (!canMark(req.staff, course)) {
+    res.status(403).json({ error: `You can only enter marks for courses you teach. ${course.code} is assigned to another lecturer.` });
+    return null;
+  }
+  return { semester, course: { code: course.code, name: course.name, level: course.level } };
 }
 
 // The class list: students registered for the course that semester, plus anyone who
@@ -34,15 +51,22 @@ router.get('/options', (req, res) => {
     .prepare('SELECT id, label, is_current FROM semesters ORDER BY starts_on DESC')
     .all()
     .map((s) => ({ id: s.id, label: s.label, isCurrent: s.is_current === 1 }));
+  // Lecturers see only their own courses; administrators see every course.
+  const mine = req.staff.role !== 'ADMIN';
   const courses = req.db
-    .prepare('SELECT code, name, level FROM courses ORDER BY level, code')
-    .all();
-  res.json({ semesters, courses });
+    .prepare(`SELECT c.code, c.name, c.level,
+                     CASE WHEN st.id IS NULL THEN NULL ELSE st.first_name || ' ' || st.last_name END AS lecturer
+              FROM courses c LEFT JOIN staff st ON st.id = c.lecturer_id
+              ${mine ? 'WHERE c.lecturer_id = ?' : ''}
+              ORDER BY c.level, c.code`)
+    .all(...(mine ? [req.staff.id] : []));
+  res.json({ semesters, courses, onlyMine: mine });
 });
 
 router.get('/', (req, res) => {
-  const { semester, course } = findSemesterAndCourse(req.db, req.query.semester, req.query.course);
-  if (!semester || !course) return res.status(404).json({ error: 'Choose a valid semester and course.' });
+  const loaded = loadCourseForMarking(req, res, req.query.semester, req.query.course);
+  if (!loaded) return;
+  const { semester, course } = loaded;
 
   const students = classList(req.db, course, semester).map((r) => ({
     studentNumber: r.student_number,
@@ -63,8 +87,9 @@ router.get('/', (req, res) => {
 /** Saves marks as drafts. Body: { semesterId, courseCode, marks: [{ studentNumber, mark|null }] } */
 router.put('/', (req, res) => {
   const { semesterId, courseCode, marks } = req.body ?? {};
-  const { semester, course } = findSemesterAndCourse(req.db, semesterId, courseCode);
-  if (!semester || !course) return res.status(404).json({ error: 'Choose a valid semester and course.' });
+  const loaded = loadCourseForMarking(req, res, semesterId, courseCode);
+  if (!loaded) return;
+  const { semester, course } = loaded;
 
   if (!Array.isArray(marks) || marks.length === 0 || marks.length > 1000) {
     return res.status(400).json({ error: 'marks must be a non-empty list.' });
@@ -121,8 +146,9 @@ router.put('/', (req, res) => {
 /** Publishes all draft marks for a course and notifies each affected student. */
 router.post('/publish', (req, res) => {
   const { semesterId, courseCode } = req.body ?? {};
-  const { semester, course } = findSemesterAndCourse(req.db, semesterId, courseCode);
-  if (!semester || !course) return res.status(404).json({ error: 'Choose a valid semester and course.' });
+  const loaded = loadCourseForMarking(req, res, semesterId, courseCode);
+  if (!loaded) return;
+  const { semester, course } = loaded;
 
   const drafts = req.db
     .prepare('SELECT student_id FROM results WHERE course_code = ? AND semester_id = ? AND published = 0')
